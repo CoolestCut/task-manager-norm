@@ -65,4 +65,8 @@ class TaskAdapter(
         arrTasks = newTasks
         notifyDataSetChanged() // Сообщаем RecyclerView, что данные изменились
     }
+
+    fun getTaskAt(position: Int): Task {
+        return arrTasks[position]
+    }
 }

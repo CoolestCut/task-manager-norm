@@ -5,9 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.taskmanager"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.taskmanager"
@@ -29,14 +27,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     buildFeatures {
         viewBinding = true
+    }
+    configurations.all {
+        exclude(group = "com.android.support")
     }
 }
 
@@ -49,11 +50,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.cardview:cardview:1.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
+
+    // Fragment KTX for by viewModels()
+    implementation("androidx.fragment:fragment-ktx:1.7.1")
+
     // Lifecycle components для ViewModelScope
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
@@ -66,10 +66,18 @@ dependencies {
     // Корyтины (если ещё нет)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Material Design
-    implementation("com.google.android.material:material:1.11.0")
-
     // RecyclerView и CardView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
+
+    // Material CalendarView
+    implementation("com.github.prolificinteractive:material-calendarview:2.0.1") {
+        exclude(group = "com.android.support")
+    }
+
+    // ThreeTenABP for Material CalendarView
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
+
+    // Preferences
+    implementation("androidx.preference:preference-ktx:1.2.1")
 }

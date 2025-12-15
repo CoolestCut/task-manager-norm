@@ -1,52 +1,55 @@
 package com.example.taskmanager
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.taskmanager.data.model.Task
 import com.example.taskmanager.databinding.ActivityCreateTaskBinding
-import com.google.android.material.button.MaterialButtonToggleGroup
+import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
+import java.util.Locale
 
 class CreateTaskActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCreateTaskBinding
-    private var selectedDate: Calendar? = null
-    private var selectedStatus: String = "todo"
+    private var selectedDate: Calendar = Calendar.getInstance()
+
+    companion object {
+        const val EXTRA_TITLE = "EXTRA_TITLE"
+        const val EXTRA_DESCRIPTION = "EXTRA_DESCRIPTION"
+        const val EXTRA_PRIORITY = "EXTRA_PRIORITY"
+        const val EXTRA_DUE_DATE = "EXTRA_DUE_DATE"
+        const val EXTRA_STATUS = "EXTRA_STATUS"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Настройка статуса
+        val selectedTime = intent.getLongExtra("SELECTED_DATE", -1)
+        if (selectedTime != -1L) {
+            selectedDate.timeInMillis = selectedTime
+        }
+        updateDateButtonText()
+
         setupStatusToggle()
 
-        // Выбор даты и времени
         binding.btnPickDate.setOnClickListener {
             showDateTimePicker()
         }
 
-        // Настройка слайдера приоритета
         binding.sliderPriority.addOnChangeListener { _, value, _ ->
-            val priorityText = when (value) {
-                1.0f -> "Низкий"
-                2.0f -> "Средний"
-                3.0f -> "Высокий"
-                else -> "Средний"
-            }
             binding.sliderPriority.value = value
         }
 
-        // Кнопка отмены
         binding.btnCancel.setOnClickListener {
             finish()
         }
 
-        // Кнопка сохранения
         binding.btnSave.setOnClickListener {
             saveTask()
         }
@@ -54,71 +57,58 @@ class CreateTaskActivity : AppCompatActivity() {
 
     private fun setupStatusToggle() {
         binding.toggleStatus.check(R.id.btnStatusTodo)
-
-        binding.toggleStatus.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                selectedStatus = when (checkedId) {
-                    R.id.btnStatusTodo -> "todo"
-                    R.id.btnStatusInProgress -> "in_progress"
-                    R.id.btnStatusDone -> "done"
-                    else -> "todo"
-                }
-            }
-        }
     }
 
     private fun showDateTimePicker() {
-        val calendar = Calendar.getInstance()
-
-        // Сначала выбираем дату
         DatePickerDialog(
             this,
             { _, year, month, day ->
-                // После выбора даты выбираем время
                 TimePickerDialog(
                     this,
                     { _, hour, minute ->
-                        selectedDate = Calendar.getInstance().apply {
-                            set(year, month, day, hour, minute)
-                        }
-
-                        // Форматируем дату для отображения
-                        val dateText = "${day}.${month + 1}.$year $hour:$minute"
-                        binding.btnPickDate.text = dateText
+                        selectedDate.set(year, month, day, hour, minute)
+                        updateDateButtonText()
                     },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
+                    selectedDate.get(Calendar.HOUR_OF_DAY),
+                    selectedDate.get(Calendar.MINUTE),
                     true
                 ).show()
             },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
         ).show()
+    }
+
+    private fun updateDateButtonText() {
+        val dateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault())
+        binding.btnPickDate.text = dateFormat.format(selectedDate.time)
     }
 
     private fun saveTask() {
         val title = binding.etTitle.text.toString().trim()
         val description = binding.etDescription.text.toString().trim()
         val priority = binding.sliderPriority.value.toInt()
+        val status = when (binding.toggleStatus.checkedButtonId) {
+            R.id.btnStatusInProgress -> "in_progress"
+            R.id.btnStatusDone -> "done"
+            else -> "todo"
+        }
 
         if (title.isEmpty()) {
             Toast.makeText(this, "Введите название задачи", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val task = Task(
-            strTitle = title,
-            strDescription = description,
-            iPriority = priority,
-            dtDueDate = selectedDate?.time,
-            strStatus = selectedStatus
-        )
+        val resultIntent = Intent().apply {
+            putExtra(EXTRA_TITLE, title)
+            putExtra(EXTRA_DESCRIPTION, description)
+            putExtra(EXTRA_PRIORITY, priority)
+            putExtra(EXTRA_DUE_DATE, selectedDate.timeInMillis)
+            putExtra(EXTRA_STATUS, status)
+        }
 
-        // Здесь будет сохранение в базу данных
-        // Пока просто возвращаемся в MainActivity
-        Toast.makeText(this, "Задача сохранена", Toast.LENGTH_SHORT).show()
-        setResult(RESULT_OK)
+        setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }
 }

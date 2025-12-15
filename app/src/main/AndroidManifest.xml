@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:name=".TaskApplication"
+        android:name=".MainApplication"
     android:allowBackup="true"
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="@xml/backup_rules"
@@ -30,6 +30,12 @@
 android:name=".CreateTaskActivity"
 android:exported="false"
 android:screenOrientation="portrait" />
+
+    <activity
+        android:name=".SettingsActivity"
+        android:exported="false"
+        android:label="@string/settings"
+        android:parentActivityName=".MainActivity" />
 
     </application>
 

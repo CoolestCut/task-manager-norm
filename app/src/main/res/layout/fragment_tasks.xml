@@ -1,69 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TasksFragment">
+    android:background="@android:color/white">
 
-    <LinearLayout
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleGroup"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:singleSelection="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Панель фильтров (как в Figma) -->
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/toggleGroup"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAll"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            app:singleSelection="true"
-            app:selectionRequired="true">
+            android:text="@string/all_tasks"
+            app:cornerRadius="20dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAll"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Все"
-                app:strokeColor="?attr/colorPrimary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTodo"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/todo"
+            app:cornerRadius="20dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnTodo"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Сделать"
-                app:strokeColor="?attr/colorPrimary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnInProgress"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/in_progress"
+            app:cornerRadius="20dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnInProgress"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="В процессе"
-                app:strokeColor="?attr/colorPrimary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDone"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/done"
+            app:cornerRadius="20dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDone"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Завершено"
-                app:strokeColor="?attr/colorPrimary" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
-        <!-- Список задач (пока пустой) -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:padding="8dp"
-            tools:listitem="@layout/item_task" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleGroup" />
 
-    </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

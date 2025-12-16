@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_tasks"
-        android:icon="@drawable/ic_tasks"
-        android:title="Задачи"/>
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Задачи" />
     <item
         android:id="@+id/navigation_calendar"
-        android:icon="@drawable/ic_calendar"
-        android:title="Календарь"/>
+        android:icon="@android:drawable/ic_menu_my_calendar"
+        android:title="Календарь" />
 </menu>

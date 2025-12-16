@@ -1,78 +1,143 @@
 package com.example.taskmanager.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.taskmanager.data.AppDatabase
+import com.example.taskmanager.data.TaskRepository
 import com.example.taskmanager.data.model.Task
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
-class TaskViewModel : ViewModel() {
+class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _tasks = MutableLiveData<List<Task>>()
-    val tasks: LiveData<List<Task>> = _tasks
-
-    private val allTasks = mutableListOf<Task>()
+    private val repository: TaskRepository
+    val allTasks: LiveData<List<Task>>
+    private val _filteredTasks = MutableLiveData<List<Task>>()
+    val filteredTasks: LiveData<List<Task>> = _filteredTasks
 
     init {
-        createTestTasks()
-        _tasks.value = allTasks
-    }
+        val taskDao = AppDatabase.getDatabase(application).taskDao()
+        repository = TaskRepository(taskDao)
+        allTasks = repository.allTasks.asLiveData() // Исправлено: Flow -> LiveData
 
-    private fun createTestTasks() {
-        val calendar = Calendar.getInstance()
-        allTasks.addAll(listOf(
-            Task(iId = 1, strTitle = "Купить продукты", strDescription = "Молоко, хлеб, яйца, фрукты", iPriority = 2, dtDueDate = getDate(calendar, 2, 15, 0), strStatus = "todo"),
-            Task(iId = 2, strTitle = "Сделать презентацию", strDescription = "Подготовить слайды для совещания", iPriority = 3, dtDueDate = getDate(calendar, 0, 18, 30), strStatus = "in_progress"),
-            Task(iId = 3, strTitle = "Отправить отчет", strDescription = "Ежемесячный отчет по проекту", iPriority = 3, dtDueDate = getDate(calendar, -1, 10, 0), strStatus = "todo"),
-            Task(iId = 4, strTitle = "Позвонить маме", strDescription = "Обсудить планы на выходные", iPriority = 1, dtDueDate = getDate(calendar, 7, 20, 0), strStatus = "done"),
-            Task(iId = 5, strTitle = "Записаться к врачу", strDescription = "Плановый осмотр", iPriority = 2, dtDueDate = null, strStatus = "todo")
-        ))
-    }
+        // Загружаем задачи при инициализации
+        loadAllTasks()
 
-    fun filterTasks(status: String) {
-        if (status == "all") {
-            _tasks.value = allTasks.toList()
-        } else {
-            _tasks.value = allTasks.filter { it.strStatus == status }
+        // Добавляем тестовые задачи если БД пуста
+        viewModelScope.launch(Dispatchers.IO) {
+            if (repository.allTasks.firstOrNull()?.isEmpty() == true) {
+                createTestTasks()
+            }
         }
     }
 
-    // Для добавления из CreateTaskActivity
-    fun addNewTask(title: String, description: String, priority: Int, dueDate: Date?, status: String) {
-        val newTask = Task(
-            iId = allTasks.size + 1,
-            strTitle = title,
-            strDescription = description,
-            iPriority = priority,
-            dtDueDate = dueDate,
-            strStatus = status
-        )
-        allTasks.add(0, newTask)
-        _tasks.value = allTasks.toList()
+    private fun loadAllTasks() {
+        viewModelScope.launch {
+            repository.allTasks.collect { tasks ->
+                _filteredTasks.postValue(tasks)
+            }
+        }
     }
 
-    // Для добавления из FAB
+    fun filterTasks(status: String) {
+        viewModelScope.launch {
+            when (status) {
+                "all" -> repository.allTasks.collect { _filteredTasks.postValue(it) }
+                else -> repository.getTasksByStatus(status).collect { _filteredTasks.postValue(it) }
+            }
+        }
+    }
+
+    fun addNewTask(title: String, description: String, priority: Int, dueDate: Date?, status: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val newTask = Task(
+                strTitle = title,
+                strDescription = description,
+                iPriority = priority,
+                dtDueDate = dueDate,
+                strStatus = status
+            )
+            repository.insertTask(newTask)
+        }
+    }
+
     fun addNewTask() {
-        val newTask = Task(
-            iId = allTasks.size + 1,
-            strTitle = "Новая задача ${allTasks.size + 1}",
-            strDescription = "Описание новой задачи",
-            iPriority = 2,
-            strStatus = "todo"
-        )
-        allTasks.add(0, newTask)
-        _tasks.value = allTasks.toList() // Обновляем LiveData
+        viewModelScope.launch(Dispatchers.IO) {
+            val newTask = Task(
+                strTitle = "Новая задача",
+                strDescription = "Описание новой задачи",
+                iPriority = 2,
+                strStatus = "todo"
+            )
+            repository.insertTask(newTask)
+        }
     }
 
     fun deleteTask(task: Task) {
-        allTasks.remove(task)
-        _tasks.value = allTasks.toList()
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteTask(task)
+        }
     }
 
     fun addTask(task: Task) {
-        allTasks.add(task)
-        _tasks.value = allTasks.toList()
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.insertTask(task)
+        }
+    }
+
+    fun updateTask(task: Task) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateTask(task)
+        }
+    }
+
+    private suspend fun createTestTasks() {
+        val calendar = Calendar.getInstance()
+        val tasks = listOf(
+            Task(
+                strTitle = "Купить продукты",
+                strDescription = "Молоко, хлеб, яйца, фрукты",
+                iPriority = 2,
+                dtDueDate = getDate(calendar, 2, 15, 0),
+                strStatus = "todo"
+            ),
+            Task(
+                strTitle = "Сделать презентацию",
+                strDescription = "Подготовить слайды для совещания",
+                iPriority = 3,
+                dtDueDate = getDate(calendar, 0, 18, 30),
+                strStatus = "in_progress"
+            ),
+            Task(
+                strTitle = "Отправить отчет",
+                strDescription = "Ежемесячный отчет по проекту",
+                iPriority = 3,
+                dtDueDate = getDate(calendar, -1, 10, 0),
+                strStatus = "todo"
+            ),
+            Task(
+                strTitle = "Позвонить маме",
+                strDescription = "Обсудить планы на выходные",
+                iPriority = 1,
+                dtDueDate = getDate(calendar, 7, 20, 0),
+                strStatus = "done"
+            ),
+            Task(
+                strTitle = "Записаться к врачу",
+                strDescription = "Плановый осмотр",
+                iPriority = 2,
+                dtDueDate = null,
+                strStatus = "todo"
+            )
+        )
+        tasks.forEach { repository.insertTask(it) }
     }
 
     private fun getDate(calendar: Calendar, daysOffset: Int, hour: Int, minute: Int): Date {

@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#BB86FC</color>
-    <color name="colorPrimaryVariant">#3700B3</color>
-    <color name="colorOnPrimary">@color/black</color>
+    <!-- Цвета для текста (темная тема) -->
+    <color name="text_primary_dark">#FFFFFF</color>
+    <color name="text_secondary_dark">#B3B3B3</color>
+    <color name="text_hint_dark">#666666</color>
 
-    <color name="colorSecondary">#03DAC5</color>
-    <color name="colorSecondaryVariant">#03DAC5</color>
-    <color name="colorOnSecondary">@color/black</color>
+    <!-- Фоны (темная тема) -->
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#1E1E1E</color>
 
-    <color name="colorBackground">#121212</color>
-    <color name="colorOnBackground">#FFFFFF</color>
-
-    <color name="colorSurface">#121212</color>
-    <color name="colorOnSurface">#FFFFFF</color>
-
-    <color name="colorError">#CF6679</color>
-    <color name="colorOnError">@color/black</color>
+    <!-- Статусы задач (ярче для темной темы) -->
+    <color name="status_todo">#FFB74D</color>
+    <color name="status_in_progress">#64B5F6</color>
+    <color name="status_done">#81C784</color>
 </resources>

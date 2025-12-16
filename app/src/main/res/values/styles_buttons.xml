@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Базовый стиль для всех кнопок -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <!-- Стиль для outlined кнопок -->
+    <style name="Widget.App.Button.OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <!-- Стиль для кнопок фильтров -->
+    <style name="Widget.App.Button.FilterButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="cornerRadius">20dp</item>
+    </style>
+</resources>

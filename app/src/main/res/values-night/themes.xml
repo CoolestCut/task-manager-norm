@@ -1,22 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.TaskManager" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
-        <item name="colorOnPrimary">@color/colorOnPrimary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/colorSecondary</item>
-        <item name="colorSecondaryVariant">@color/colorSecondaryVariant</item>
-        <item name="colorOnSecondary">@color/colorOnSecondary</item>
-        <!-- Status bar color. -->
+    <!-- Оставь такой же как themes.xml или удали файл -->
+    <style name="Theme.TaskManager" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Те же цвета что и в светлой теме -->
+        <item name="colorPrimary">#665DC8</item>
+        <item name="colorPrimaryVariant">#4A44A0</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <item name="colorSecondary">#03DAC5</item>
+        <item name="colorSecondaryVariant">#018786</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
-        <item name="android:colorBackground">@color/colorBackground</item>
-        <item name="colorOnBackground">@color/colorOnBackground</item>
-        <item name="colorSurface">@color/colorSurface</item>
-        <item name="colorOnSurface">@color/colorOnSurface</item>
-        <item name="colorError">@color/colorError</item>
-        <item name="colorOnError">@color/colorOnError</item>
+
+        <!-- Темный фон для ночной темы -->
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 </resources>

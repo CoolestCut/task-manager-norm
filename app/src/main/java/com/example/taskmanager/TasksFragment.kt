@@ -4,15 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.taskmanager.data.model.Task
 import com.example.taskmanager.databinding.FragmentTasksBinding
 import com.example.taskmanager.ui.adapter.TaskAdapter
 import com.example.taskmanager.ui.viewmodel.TaskViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class TasksFragment : Fragment() {
 
@@ -74,8 +80,8 @@ class TasksFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
     }
 
-    private fun showTaskActionsDialog(task: com.example.taskmanager.data.model.Task) {
-        val nextStatusText = com.example.taskmanager.data.model.Task.getStatusText(task.getNextStatus())
+    private fun showTaskActionsDialog(task: Task) {
+        val nextStatusText = Task.getStatusText(task.getNextStatus())
         val actions = arrayOf(
             "Изменить статус на: $nextStatusText",
             "Редактировать задачу",
@@ -83,7 +89,7 @@ class TasksFragment : Fragment() {
             "Отмена"
         )
 
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle(task.strTitle)
             .setItems(actions) { _, which ->
                 when (which) {
@@ -96,26 +102,26 @@ class TasksFragment : Fragment() {
             .show()
     }
 
-    private fun changeTaskStatusToNext(task: com.example.taskmanager.data.model.Task) {
+    private fun changeTaskStatusToNext(task: Task) {
         val newStatus = task.getNextStatus()
         changeTaskStatus(task, newStatus)
     }
 
-    private fun changeTaskStatus(task: com.example.taskmanager.data.model.Task, newStatus: String) {
+    private fun changeTaskStatus(task: Task, newStatus: String) {
         if (task.strStatus != newStatus) {
             val updatedTask = task.copy(strStatus = newStatus)
             viewModel.updateTask(updatedTask)
 
-            val statusText = com.example.taskmanager.data.model.Task.getStatusText(newStatus)
+            val statusText = Task.getStatusText(newStatus)
             Snackbar.make(binding.root, "Статус изменен на: $statusText", Snackbar.LENGTH_SHORT).show()
         }
     }
 
-    private fun showStatusSelectionDialog(task: com.example.taskmanager.data.model.Task) {
-        val statuses = com.example.taskmanager.data.model.Task.STATUS_LIST
-        val statusNames = statuses.map { com.example.taskmanager.data.model.Task.getStatusText(it) }
+    private fun showStatusSelectionDialog(task: Task) {
+        val statuses = Task.STATUS_LIST
+        val statusNames = statuses.map { Task.getStatusText(it) }
 
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle("Выберите статус")
             .setItems(statusNames.toTypedArray()) { _, which ->
                 val newStatus = statuses[which]
@@ -125,13 +131,12 @@ class TasksFragment : Fragment() {
             .show()
     }
 
-    private fun editTask(task: com.example.taskmanager.data.model.Task) {
-        // TODO: Реализовать редактирование
-        Snackbar.make(binding.root, "Редактирование: ${task.strTitle}", Snackbar.LENGTH_SHORT).show()
+    private fun editTask(task: Task) {
+        (activity as? MainActivity)?.loadFragment(AddEditTaskFragment.newInstance(task), true)
     }
 
-    private fun showDeleteConfirmationDialog(task: com.example.taskmanager.data.model.Task) {
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+    private fun showDeleteConfirmationDialog(task: Task) {
+        AlertDialog.Builder(requireContext())
             .setTitle("Удаление задачи")
             .setMessage("Удалить задачу \"${task.strTitle}\"?")
             .setPositiveButton("Удалить") { _, _ ->
@@ -142,15 +147,19 @@ class TasksFragment : Fragment() {
             .show()
     }
 
-    private fun showUndoSnackbar(deletedTask: com.example.taskmanager.data.model.Task) {
+    private fun showUndoSnackbar(deletedTask: Task) {
         Snackbar.make(binding.root, "Задача удалена", Snackbar.LENGTH_LONG)
             .setAction("Отмена") { viewModel.addTask(deletedTask) }
             .show()
     }
 
     private fun observeViewModel() {
-        viewModel.filteredTasks.observe(viewLifecycleOwner) {
-            taskAdapter.updateTasks(it)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filteredTasks.collect { tasks ->
+                    taskAdapter.updateTasks(tasks)
+                }
+            }
         }
     }
 
@@ -160,9 +169,9 @@ class TasksFragment : Fragment() {
             if (isChecked) {
                 when (checkedId) {
                     R.id.btnAll -> viewModel.filterTasks("all")
-                    R.id.btnTodo -> viewModel.filterTasks(com.example.taskmanager.data.model.Task.STATUS_TODO)
-                    R.id.btnInProgress -> viewModel.filterTasks(com.example.taskmanager.data.model.Task.STATUS_IN_PROGRESS)
-                    R.id.btnDone -> viewModel.filterTasks(com.example.taskmanager.data.model.Task.STATUS_DONE)
+                    R.id.btnTodo -> viewModel.filterTasks(Task.STATUS_TODO)
+                    R.id.btnInProgress -> viewModel.filterTasks(Task.STATUS_IN_PROGRESS)
+                    R.id.btnDone -> viewModel.filterTasks(Task.STATUS_DONE)
                 }
             }
         }

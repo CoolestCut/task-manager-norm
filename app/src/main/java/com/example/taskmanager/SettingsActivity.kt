@@ -3,6 +3,7 @@ package com.example.taskmanager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.taskmanager.databinding.SettingsActivityBinding
+import com.example.taskmanager.SettingsFragment
 
 class SettingsActivity : AppCompatActivity() {
 

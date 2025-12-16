@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class TaskAdapter(
-    private var arrTasks: List<Task> = emptyList(),
+    var arrTasks: List<Task> = emptyList(),
     private val onTaskClick: (Task) -> Unit,
     private val onStatusClick: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {

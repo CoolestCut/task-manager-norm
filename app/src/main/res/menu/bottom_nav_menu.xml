@@ -4,6 +4,11 @@
         android:id="@+id/navigation_tasks"
         android:icon="@android:drawable/ic_menu_agenda"
         android:title="Задачи" />
+
+    <item
+        android:id="@+id/navigation_placeholder"
+        android:title="" />
+
     <item
         android:id="@+id/navigation_calendar"
         android:icon="@android:drawable/ic_menu_my_calendar"

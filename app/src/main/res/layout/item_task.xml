@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardBackgroundColor="@android:color/white"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp"
     app:cardUseCompatPadding="true">
@@ -20,7 +20,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Название задачи"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="01 января - 10:00"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
             app:layout_constraintTop_toBottomOf="@id/tvTitle" />
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Описание задачи"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/tvTitle"
@@ -56,9 +56,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Статус"
-            app:chipBackgroundColor="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDateTime" />
+            app:chipBackgroundColor="?attr/colorPrimary"
+            android:textColor="?attr/colorOnPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvDescription" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

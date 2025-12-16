@@ -3,13 +3,14 @@ package com.example.taskmanager.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.taskmanager.data.AppDatabase
 import com.example.taskmanager.data.TaskRepository
 import com.example.taskmanager.data.model.Task
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -18,19 +19,15 @@ import java.util.Date
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: TaskRepository
-    val allTasks: LiveData<List<Task>>
-    private val _filteredTasks = MutableLiveData<List<Task>>()
-    val filteredTasks: LiveData<List<Task>> = _filteredTasks
+    private val _filteredTasks = MutableStateFlow<List<Task>>(emptyList())
+    val filteredTasks: StateFlow<List<Task>> = _filteredTasks
 
     init {
         val taskDao = AppDatabase.getDatabase(application).taskDao()
         repository = TaskRepository(taskDao)
-        allTasks = repository.allTasks.asLiveData() // Исправлено: Flow -> LiveData
 
-        // Загружаем задачи при инициализации
         loadAllTasks()
 
-        // Добавляем тестовые задачи если БД пуста
         viewModelScope.launch(Dispatchers.IO) {
             if (repository.allTasks.firstOrNull()?.isEmpty() == true) {
                 createTestTasks()
@@ -41,7 +38,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadAllTasks() {
         viewModelScope.launch {
             repository.allTasks.collect { tasks ->
-                _filteredTasks.postValue(tasks)
+                _filteredTasks.value = tasks
             }
         }
     }
@@ -49,8 +46,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun filterTasks(status: String) {
         viewModelScope.launch {
             when (status) {
-                "all" -> repository.allTasks.collect { _filteredTasks.postValue(it) }
-                else -> repository.getTasksByStatus(status).collect { _filteredTasks.postValue(it) }
+                "all" -> repository.allTasks.collect { _filteredTasks.value = it }
+                else -> repository.getTasksByStatus(status).collect { _filteredTasks.value = it }
             }
         }
     }

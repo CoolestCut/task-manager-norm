@@ -8,14 +8,17 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.taskmanager.data.model.Task
 import com.example.taskmanager.databinding.FragmentCalendarBinding
 import com.example.taskmanager.ui.adapter.TaskAdapter
 import com.example.taskmanager.ui.viewmodel.TaskViewModel
@@ -24,6 +27,7 @@ import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.prolificinteractive.materialcalendarview.spans.DotSpan
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
@@ -60,7 +64,6 @@ class CalendarFragment : Fragment() {
                 showTaskActionsDialog(task)
             },
             onStatusClick = { task ->
-                // Добавляем вызов функции выбора статуса
                 showStatusSelectionDialog(task)
             }
         )
@@ -73,10 +76,9 @@ class CalendarFragment : Fragment() {
         setupSwipeForTasks()
     }
 
-    // Добавляем недостающую функцию
-    private fun showStatusSelectionDialog(task: com.example.taskmanager.data.model.Task) {
-        val statuses = com.example.taskmanager.data.model.Task.STATUS_LIST
-        val statusNames = statuses.map { com.example.taskmanager.data.model.Task.getStatusText(it) }
+    private fun showStatusSelectionDialog(task: Task) {
+        val statuses = Task.STATUS_LIST
+        val statusNames = statuses.map { Task.getStatusText(it) }
 
         AlertDialog.Builder(requireContext())
             .setTitle("Выберите статус")
@@ -91,19 +93,21 @@ class CalendarFragment : Fragment() {
     private fun setupSwipeForTasks() {
         val swipeCallback = object : SwipeToDeleteCallback(requireContext()) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                val task = calendarTaskAdapter.getTaskAt(position)
+                val position = viewHolder.bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val task = calendarTaskAdapter.getTaskAt(position)
 
-                when (direction) {
-                    ItemTouchHelper.LEFT -> {
-                        showDeleteConfirmationDialog(task)
+                    when (direction) {
+                        ItemTouchHelper.LEFT -> {
+                            showDeleteConfirmationDialog(task)
+                        }
+                        ItemTouchHelper.RIGHT -> {
+                            changeTaskStatusToNext(task)
+                        }
                     }
-                    ItemTouchHelper.RIGHT -> {
-                        changeTaskStatusToNext(task)
-                    }
+
+                    calendarTaskAdapter.notifyItemChanged(position)
                 }
-
-                calendarTaskAdapter.notifyItemChanged(position)
             }
         }
 
@@ -111,8 +115,8 @@ class CalendarFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.rvCalendarTasks)
     }
 
-    private fun showTaskActionsDialog(task: com.example.taskmanager.data.model.Task) {
-        val nextStatusText = com.example.taskmanager.data.model.Task.getStatusText(task.getNextStatus())
+    private fun showTaskActionsDialog(task: Task) {
+        val nextStatusText = Task.getStatusText(task.getNextStatus())
         val actions = arrayOf(
             "Изменить статус на: $nextStatusText",
             "Редактировать задачу",
@@ -133,26 +137,26 @@ class CalendarFragment : Fragment() {
             .show()
     }
 
-    private fun changeTaskStatusToNext(task: com.example.taskmanager.data.model.Task) {
+    private fun changeTaskStatusToNext(task: Task) {
         val newStatus = task.getNextStatus()
         changeTaskStatus(task, newStatus)
     }
 
-    private fun changeTaskStatus(task: com.example.taskmanager.data.model.Task, newStatus: String) {
+    private fun changeTaskStatus(task: Task, newStatus: String) {
         if (task.strStatus != newStatus) {
             val updatedTask = task.copy(strStatus = newStatus)
             viewModel.updateTask(updatedTask)
 
-            val statusText = com.example.taskmanager.data.model.Task.getStatusText(newStatus)
+            val statusText = Task.getStatusText(newStatus)
             Snackbar.make(binding.root, "Статус изменен на: $statusText", Snackbar.LENGTH_SHORT).show()
         }
     }
 
-    private fun editTask(task: com.example.taskmanager.data.model.Task) {
-        Toast.makeText(requireContext(), "Редактирование: ${task.strTitle}", Toast.LENGTH_SHORT).show()
+    private fun editTask(task: Task) {
+        (activity as? MainActivity)?.loadFragment(AddEditTaskFragment.newInstance(task), true)
     }
 
-    private fun showDeleteConfirmationDialog(task: com.example.taskmanager.data.model.Task) {
+    private fun showDeleteConfirmationDialog(task: Task) {
         AlertDialog.Builder(requireContext())
             .setTitle("Удаление задачи")
             .setMessage("Удалить задачу \"${task.strTitle}\"?")
@@ -164,7 +168,7 @@ class CalendarFragment : Fragment() {
             .show()
     }
 
-    private fun showUndoSnackbar(deletedTask: com.example.taskmanager.data.model.Task) {
+    private fun showUndoSnackbar(deletedTask: Task) {
         Snackbar.make(binding.root, "Задача удалена", Snackbar.LENGTH_LONG)
             .setAction("Отмена") { viewModel.addTask(deletedTask) }
             .show()
@@ -190,6 +194,7 @@ class CalendarFragment : Fragment() {
         binding.calendarView.setOnDateChangedListener { _, date, _ ->
             selectedDate = date
             filterTasksForSelectedDate(date)
+            (activity as? MainActivity)?.showBottomAppBarAndFab()
         }
 
         binding.calendarView.setOnMonthChangedListener { widget, date ->
@@ -199,14 +204,18 @@ class CalendarFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.allTasks.observe(viewLifecycleOwner) { tasks ->
-            updateCalendarDecorators(tasks ?: emptyList())
-            filterTasksForSelectedDate(selectedDate)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filteredTasks.collect { tasks ->
+                    updateCalendarDecorators(tasks)
+                    filterTasksForSelectedDate(selectedDate)
+                }
+            }
         }
     }
 
     private fun filterTasksForSelectedDate(date: CalendarDay) {
-        val tasks = viewModel.allTasks.value ?: emptyList()
+        val tasks = viewModel.filteredTasks.value
         val tasksForDay = tasks.filter { task ->
             task.dtDueDate?.let { dueDate ->
                 val taskCalendar = Calendar.getInstance().apply { time = dueDate }
@@ -224,7 +233,7 @@ class CalendarFragment : Fragment() {
         binding.rvCalendarTasks.visibility = if (tasksForDay.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    private fun updateCalendarDecorators(tasks: List<com.example.taskmanager.data.model.Task>) {
+    private fun updateCalendarDecorators(tasks: List<Task>) {
         val todoDates = mutableSetOf<CalendarDay>()
         val inProgressDates = mutableSetOf<CalendarDay>()
         val doneDates = mutableSetOf<CalendarDay>()
@@ -239,9 +248,9 @@ class CalendarFragment : Fragment() {
                     calendar.get(Calendar.DAY_OF_MONTH)
                 )
                 when (task.strStatus) {
-                    com.example.taskmanager.data.model.Task.STATUS_TODO -> todoDates.add(day)
-                    com.example.taskmanager.data.model.Task.STATUS_IN_PROGRESS -> inProgressDates.add(day)
-                    com.example.taskmanager.data.model.Task.STATUS_DONE -> doneDates.add(day)
+                    Task.STATUS_TODO -> todoDates.add(day)
+                    Task.STATUS_IN_PROGRESS -> inProgressDates.add(day)
+                    Task.STATUS_DONE -> doneDates.add(day)
                 }
             }
         }
@@ -294,7 +303,7 @@ class OutOfMonthDayDecorator(private var month: Int) : DayViewDecorator {
     }
 
     override fun decorate(view: DayViewFacade) {
-        view.addSpan(ForegroundColorSpan(Color.GRAY))
+        view.setDaysDisabled(true)
     }
 
     fun setMonth(month: Int) {

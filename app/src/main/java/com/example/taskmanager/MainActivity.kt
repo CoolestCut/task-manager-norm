@@ -14,28 +14,47 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Начальный фрагмент
-        loadFragment(TasksFragment())
+        setSupportActionBar(binding.toolbar)
 
-        // Навигация
+        if (supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
+            loadFragment(TasksFragment())
+            binding.navView.selectedItemId = R.id.navigation_tasks
+        }
+
+        binding.navView.background = null
+        binding.navView.menu.getItem(1).isEnabled = false
+
         binding.navView.setOnNavigationItemSelectedListener { item ->
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
             when (item.itemId) {
                 R.id.navigation_tasks -> {
-                    loadFragment(TasksFragment())
+                    if (currentFragment !is TasksFragment) loadFragment(TasksFragment())
                     true
                 }
                 R.id.navigation_calendar -> {
-                    loadFragment(CalendarFragment())
+                    if (currentFragment !is CalendarFragment) loadFragment(CalendarFragment())
                     true
                 }
                 else -> false
             }
         }
+
+        binding.fabAddTask.setOnClickListener {
+            loadFragment(AddEditTaskFragment.newInstance(), true)
+        }
     }
 
-    private fun loadFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
+    fun loadFragment(fragment: Fragment, addToBackStack: Boolean = false) {
+        val transaction = supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
-            .commit()
+        if (addToBackStack) {
+            transaction.addToBackStack(fragment.javaClass.name)
+        }
+        transaction.commit()
+    }
+
+    fun showBottomAppBarAndFab() {
+        binding.bottomAppBar.performShow()
+        binding.fabAddTask.show()
     }
 }

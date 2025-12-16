@@ -1,11 +1,14 @@
 package com.example.taskmanager.data.model
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.example.taskmanager.data.converter.DateConverter
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 
+@Parcelize
 @Entity(tableName = "tasks")
 @TypeConverters(DateConverter::class)
 data class Task(
@@ -18,7 +21,7 @@ data class Task(
     val bIsCompleted: Boolean = false,
     val dtCreatedAt: Date = Date(),
     val strStatus: String = STATUS_TODO
-) {
+) : Parcelable {
     companion object {
         const val STATUS_TODO = "todo"
         const val STATUS_IN_PROGRESS = "in_progress"

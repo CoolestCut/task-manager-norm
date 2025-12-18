@@ -1,14 +1,17 @@
 package com.example.taskmanager.ui.adapter
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.taskmanager.data.model.Task
+import com.bumptech.glide.Glide
 import com.example.taskmanager.R
+import com.example.taskmanager.data.model.Task
 import com.google.android.material.chip.Chip
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -21,6 +24,7 @@ class TaskAdapter(
 
     class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardView: CardView = itemView.findViewById(R.id.cardView)
+        val ivTaskImage: ImageView = itemView.findViewById(R.id.ivTaskImage)
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvDateTime: TextView = itemView.findViewById(R.id.tvDateTime)
         val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
@@ -38,6 +42,13 @@ class TaskAdapter(
 
         holder.tvTitle.text = task.strTitle
         holder.tvDescription.text = task.strDescription
+
+        task.imageUrl?.let {
+            holder.ivTaskImage.visibility = View.VISIBLE
+            Glide.with(holder.itemView.context).load(Uri.parse(it)).into(holder.ivTaskImage)
+        } ?: run {
+            holder.ivTaskImage.visibility = View.GONE
+        }
 
         val dateFormat = SimpleDateFormat("dd MMMM - HH:mm", Locale.getDefault())
         val dateText = task.dtDueDate?.let { dateFormat.format(it) } ?: "Без срока"

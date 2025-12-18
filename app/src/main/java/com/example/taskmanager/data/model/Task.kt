@@ -20,7 +20,8 @@ data class Task(
     val dtDueDate: Date? = null,
     val bIsCompleted: Boolean = false,
     val dtCreatedAt: Date = Date(),
-    val strStatus: String = STATUS_TODO
+    val strStatus: String = STATUS_TODO,
+    val imageUrl: String? = null
 ) : Parcelable {
     companion object {
         const val STATUS_TODO = "todo"

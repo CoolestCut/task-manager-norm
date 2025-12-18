@@ -2,8 +2,6 @@ package com.example.taskmanager.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.taskmanager.data.AppDatabase
 import com.example.taskmanager.data.TaskRepository
@@ -11,7 +9,7 @@ import com.example.taskmanager.data.model.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -26,19 +24,14 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         val taskDao = AppDatabase.getDatabase(application).taskDao()
         repository = TaskRepository(taskDao)
 
-        loadAllTasks()
-
-        viewModelScope.launch(Dispatchers.IO) {
-            if (repository.allTasks.firstOrNull()?.isEmpty() == true) {
-                createTestTasks()
-            }
-        }
-    }
-
-    private fun loadAllTasks() {
         viewModelScope.launch {
-            repository.allTasks.collect { tasks ->
-                _filteredTasks.value = tasks
+            // Сначала получаем все задачи
+            val allTasks = repository.allTasks.first()
+            _filteredTasks.value = allTasks
+
+            // Если база данных пуста, создаем тестовые задачи
+            if (allTasks.isEmpty()) {
+                createTestTasks()
             }
         }
     }
@@ -49,31 +42,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                 "all" -> repository.allTasks.collect { _filteredTasks.value = it }
                 else -> repository.getTasksByStatus(status).collect { _filteredTasks.value = it }
             }
-        }
-    }
-
-    fun addNewTask(title: String, description: String, priority: Int, dueDate: Date?, status: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val newTask = Task(
-                strTitle = title,
-                strDescription = description,
-                iPriority = priority,
-                dtDueDate = dueDate,
-                strStatus = status
-            )
-            repository.insertTask(newTask)
-        }
-    }
-
-    fun addNewTask() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val newTask = Task(
-                strTitle = "Новая задача",
-                strDescription = "Описание новой задачи",
-                iPriority = 2,
-                strStatus = "todo"
-            )
-            repository.insertTask(newTask)
         }
     }
 

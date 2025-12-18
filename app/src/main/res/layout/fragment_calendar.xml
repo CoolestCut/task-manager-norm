@@ -13,13 +13,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:mcv_selectionColor="?attr/colorPrimary" />
+        app:mcv_dateTextAppearance="@style/CalendarWidgetDates"
+        app:mcv_headerTextAppearance="@style/CalendarWidgetHeader"
+        app:mcv_selectionColor="?attr/colorPrimary"
+        app:mcv_weekDayTextAppearance="@style/CalendarWidgetHeader" />
 
     <TextView
         android:id="@+id/tvNoTasks"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-165dp"
+        android:layout_marginTop="100dp"
         android:text="@string/no_tasks"
         android:textColor="?android:attr/textColorSecondary"
         android:textSize="16sp"
@@ -32,7 +35,7 @@
         android:id="@+id/rvCalendarTasks"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="-165dp"
+        android:layout_marginTop="8dp"
         android:padding="8dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

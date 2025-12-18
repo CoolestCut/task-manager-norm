@@ -4,10 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.taskmanager.data.model.Task
 
 @Database(
-    entities = [com.example.taskmanager.data.model.Task::class],
-    version = 1,
+    entities = [Task::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "task_database"
+                    "task_database_v2" // Изменяем имя файла БД, чтобы гарантированно создать новую
                 )
                     .fallbackToDestructiveMigration()
                     .build()

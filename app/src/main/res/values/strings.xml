@@ -1,5 +1,4 @@
 <resources>
-    <!-- Существующие строки -->
     <string name="app_name">Task Manager</string>
     <string name="title_activity_main">Task Manager</string>
     <string name="navigation_tasks">Задачи</string>
@@ -9,11 +8,10 @@
     <string name="todo">Сделать</string>
     <string name="in_progress">В процессе</string>
     <string name="done">Завершено</string>
-
-    <!-- Добавьте эти строки для настроек -->
-    <string name="theme_header">Тема оформления</string>
-    <string name="theme_title">Выбор темы</string>
-    <string name="notifications_title">Уведомления</string>
-    <string name="notifications_summary">Получать уведомления о задачах</string>
     <string name="settings">Настройки</string>
+
+    <!-- Preferences -->
+    <string name="pref_header_theme">Тема</string>
+    <string name="pref_title_theme">Выбор темы</string>
+
 </resources>

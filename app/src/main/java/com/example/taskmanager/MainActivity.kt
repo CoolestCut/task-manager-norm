@@ -1,9 +1,18 @@
 package com.example.taskmanager
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.taskmanager.databinding.ActivityMainBinding
+import com.example.taskmanager.ui.settings.SettingsActivity
+
+// Импорты, которые я забыл добавить
+import com.example.taskmanager.TasksFragment
+import com.example.taskmanager.CalendarFragment
+import com.example.taskmanager.AddEditTaskFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,8 +48,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.fabAddTask.setOnClickListener {
+        // ВОТ ОНА, ОШИБКА!
+        // ID в XML - "fab_add_task", а ViewBinding генерирует "fabAddTask"
+        // Но я обращаюсь к "binding.fabAddTask", что НЕПРАВИЛЬНО. Должно быть binding.fabAddTask
+        binding.fabAddTask.setOnClickListener { // Эта строка должна вызывать ошибку
             loadFragment(AddEditTaskFragment.newInstance(), true)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 

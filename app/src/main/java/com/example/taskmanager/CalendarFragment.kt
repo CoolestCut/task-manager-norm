@@ -102,7 +102,7 @@ class CalendarFragment : Fragment() {
                             showDeleteConfirmationDialog(task)
                         }
                         ItemTouchHelper.RIGHT -> {
-                            changeTaskStatusToNext(task)
+                            editTask(task)
                         }
                     }
 

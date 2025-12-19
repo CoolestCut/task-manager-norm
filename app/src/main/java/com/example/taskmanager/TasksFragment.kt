@@ -68,7 +68,7 @@ class TasksFragment : Fragment() {
                         showDeleteConfirmationDialog(task)
                     }
                     ItemTouchHelper.RIGHT -> {
-                        changeTaskStatusToNext(task)
+                        editTask(task)
                     }
                 }
 
@@ -165,13 +165,17 @@ class TasksFragment : Fragment() {
 
     private fun setupFilters() {
         binding.toggleGroup.check(R.id.btnAll)
-        binding.toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        binding.toggleGroup.addOnButtonCheckedListener { group, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
                     R.id.btnAll -> viewModel.filterTasks("all")
                     R.id.btnTodo -> viewModel.filterTasks(Task.STATUS_TODO)
                     R.id.btnInProgress -> viewModel.filterTasks(Task.STATUS_IN_PROGRESS)
                     R.id.btnDone -> viewModel.filterTasks(Task.STATUS_DONE)
+                }
+            } else {
+                if (group.checkedButtonId == View.NO_ID) {
+                    group.check(R.id.btnAll)
                 }
             }
         }

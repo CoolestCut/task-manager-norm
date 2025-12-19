@@ -7,9 +7,7 @@ import com.example.taskmanager.data.AppDatabase
 import com.example.taskmanager.data.TaskRepository
 import com.example.taskmanager.data.model.Task
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -17,19 +15,25 @@ import java.util.Date
 class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: TaskRepository
-    private val _filteredTasks = MutableStateFlow<List<Task>>(emptyList())
-    val filteredTasks: StateFlow<List<Task>> = _filteredTasks
+    private val _currentFilter = MutableStateFlow("all")
+    
+    val filteredTasks: StateFlow<List<Task>> = _currentFilter
+        .flatMapLatest { filter ->
+            if (filter == "all") {
+                repository.allTasks
+            } else {
+                repository.getTasksByStatus(filter)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     init {
         val taskDao = AppDatabase.getDatabase(application).taskDao()
         repository = TaskRepository(taskDao)
 
         viewModelScope.launch {
-            // Сначала получаем все задачи
-            val allTasks = repository.allTasks.first()
-            _filteredTasks.value = allTasks
-
             // Если база данных пуста, создаем тестовые задачи
+            val allTasks = repository.allTasks.first()
             if (allTasks.isEmpty()) {
                 createTestTasks()
             }
@@ -37,12 +41,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun filterTasks(status: String) {
-        viewModelScope.launch {
-            when (status) {
-                "all" -> repository.allTasks.collect { _filteredTasks.value = it }
-                else -> repository.getTasksByStatus(status).collect { _filteredTasks.value = it }
-            }
-        }
+        _currentFilter.value = status
     }
 
     fun deleteTask(task: Task) {

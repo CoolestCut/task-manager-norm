@@ -7,12 +7,14 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -39,8 +41,14 @@ class AddEditTaskFragment : Fragment() {
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let {
-                imageUri = it
+            result.data?.data?.let { uri ->
+                try {
+                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                    requireContext().contentResolver.takePersistableUriPermission(uri, takeFlags)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                imageUri = uri
                 showImagePreview(imageUri)
             }
         }
@@ -50,18 +58,6 @@ class AddEditTaskFragment : Fragment() {
         if (result.resultCode == Activity.RESULT_OK) {
             imageUri = tempImageUri
             showImagePreview(imageUri)
-        }
-    }
-
-    private val requestGalleryPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-        if (isGranted) {
-            openGallery()
-        }
-    }
-
-    private val requestCameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-        if (isGranted) {
-            openCamera()
         }
     }
 
@@ -82,6 +78,8 @@ class AddEditTaskFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        setupToolbar()
 
         taskToEdit?.let { task ->
             binding.etTitle.setText(task.strTitle)
@@ -107,22 +105,36 @@ class AddEditTaskFragment : Fragment() {
         }
     }
 
+    private fun setupToolbar() {
+        binding.toolbar.title = if (taskToEdit == null) "Новая задача" else "Редактирование"
+        binding.toolbar.setNavigationOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+    }
+
     private fun showImageSourceDialog() {
         val options = arrayOf("Сделать фото", "Выбрать из галереи")
         AlertDialog.Builder(requireContext())
             .setTitle("Прикрепить изображение")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    1 -> requestGalleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    0 -> openCamera()
+                    1 -> openGallery()
                 }
             }
             .show()
     }
 
     private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        pickImageLauncher.launch(intent)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        try {
+            pickImageLauncher.launch(intent)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Не удалось открыть галерею", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openCamera() {
@@ -140,7 +152,11 @@ class AddEditTaskFragment : Fragment() {
             )
             tempImageUri = photoURI
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            takePictureLauncher.launch(intent)
+            try {
+                takePictureLauncher.launch(intent)
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Не удалось открыть камеру", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
